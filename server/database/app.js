@@ -1,3 +1,6 @@
+/* REMEMBER TO RUN AFTER EDITING THIS FILE */
+//docker build . -t nodeapp
+
 const express = require('express');
 const mongoose = require('mongoose');
 const fs = require('fs');
@@ -36,7 +39,7 @@ app.get('/', async (req, res) => {
     res.send("Welcome to the Mongoose API")
 });
 
-// Express route to fetch all reviews
+// All reviews
 app.get('/fetchReviews', async (req, res) => {
   try {
     const documents = await Reviews.find();
@@ -46,7 +49,7 @@ app.get('/fetchReviews', async (req, res) => {
   }
 });
 
-// Express route to fetch reviews by a particular dealer
+// Reviews by certain dealer
 app.get('/fetchReviews/dealer/:id', async (req, res) => {
   try {
     const documents = await Reviews.find({dealership: req.params.id});
@@ -56,19 +59,34 @@ app.get('/fetchReviews/dealer/:id', async (req, res) => {
   }
 });
 
-// Express route to fetch all dealerships
+// All dealerships
 app.get('/fetchDealers', async (req, res) => {
-//Write your code here
+    try{
+        const dealers = await Dealerships.find();
+        res.json(dealers);
+    } catch(error){
+        res.status(500).json({error: 'Error fetching dealers'});
+    }
 });
 
-// Express route to fetch Dealers by a particular state
+// Dealers by a particular state
 app.get('/fetchDealers/:state', async (req, res) => {
-//Write your code here
+    try{
+        const dealers = await Dealerships.find({'state': req.params.state});
+        res.json(dealers);
+    } catch(error){
+        res.status(500).json({error: 'Error fetching dealers'});
+    }
 });
 
-// Express route to fetch dealer by a particular id
+// Specific dealer
 app.get('/fetchDealer/:id', async (req, res) => {
-//Write your code here
+    try{
+        const dealer = await Dealerships.findOne({'id': req.params.id});
+        res.json(dealer);
+    } catch(error){
+        res.status(500).json({error: 'Error fetching dealers'});
+    }
 });
 
 //Express route to insert review
