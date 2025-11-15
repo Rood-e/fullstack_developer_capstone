@@ -33,7 +33,7 @@ jobs:
   # ---
 
   lint_js:
-    name: Lint JavaScript Files (ESLint)
+    name: Lint JavaScript Files (ESLint v8)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
@@ -44,20 +44,19 @@ jobs:
       with:
         node-version: 20
         
-    # INSTALLAZIONE LOCALE DI ESLINT v8 e plugin React
     - name: Install ESLint v8 and Dependencies Locally
       run: |
-        # Creiamo un file package.json vuoto (se non esiste) per installare le dipendenze
+        # Inizializza package.json se non esiste
         if [ ! -f package.json ]; then
             npm init -y
         fi
         
-        # Installiamo le dipendenze localmente nella cartella node_modules
-        npm install eslint@8 eslint-plugin-react --save-dev
+        # Installazione locale di ESLint v8 e plugin (risolve il problema "plugin not found")
+        npm install eslint@8 eslint-plugin-react eslint-config-react-app --save-dev
         
-    # CREAZIONE DEL FILE .eslintrc.json (Rimane lo stesso)
     - name: Create ESLint Configuration File
       run: |
+        # Questo file .eslintrc.json è compatibile con ESLint v8 e risolve i problemi ES6/React
         echo '{
           "env": {
             "browser": true,
@@ -67,7 +66,8 @@ jobs:
           },
           "extends": [
             "eslint:recommended",
-            "plugin:react/recommended"
+            "plugin:react/recommended",
+            "react-app"
           ],
           "parserOptions": {
             "ecmaVersion": 2020,
@@ -93,13 +93,6 @@ jobs:
         
     - name: Run Linter
       run: |
-        # Eseguiamo ESLint utilizzando il binario locale installato in node_modules/.bin/
+        # Esegue il binario locale di ESLint.
         ./node_modules/.bin/eslint . --ext .js --ignore-pattern "**/node_modules/**"
-        echo "Linted all the js files successfully"
-        
-    - name: Run Linter
-      run: |
-        # Eseguiamo ESLint. Il flag --ignore-pattern è preferibile per i node_modules
-        # Dato che usiamo v8, non c'è il problema di --ignore-path non valido
-        eslint . --ext .js --ignore-pattern "**/node_modules/**"
         echo "Linted all the js files successfully"
