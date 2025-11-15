@@ -1,4 +1,37 @@
-lint_js:
+name: 'Lint Code'
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+
+  lint_python:
+    name: Lint Python Files
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+        
+    - name: Run Linter
+      run: |
+        # Esegue flake8 su tutti i file Python, escludendo le cartelle non necessarie
+        flake8 . --exclude=migrations,__pycache__,venv,node_modules
+        echo "Linted all the python files successfully"
+
+  lint_js: # <-- INIZIO DEL JOB JS
     name: Lint JavaScript Files (ESLint)
     runs-on: ubuntu-latest
     steps:
@@ -8,19 +41,18 @@ lint_js:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        # Usa una versione LTS moderna, come la 20
+        # Usa una versione LTS moderna per supportare ES6/ES8
         node-version: 20
         
     - name: Install Dependencies and ESLint
+      # Se non hai un package.json, l'installazione globale è necessaria
       run: |
-        # Installa ESLint globalmente (o localmente se hai un package.json)
         npm install -g eslint
-        # Se usi React, ti serviranno anche i plugin specifici
         npm install -g eslint-plugin-react
         
     - name: Create ESLint Configuration File
       run: |
-        # Crea il file .eslintrc.json con la configurazione che risolve gli errori ES6/ES8
+        # Crea il file .eslintrc.json con la configurazione che risolve gli errori ES6/ES8/React
         echo '{
           "env": {
             "browser": true,
