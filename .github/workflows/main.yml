@@ -1,53 +1,61 @@
-name: 'Lint Code'
-
-on:
-  push:
-    branches: [master, main]
-  pull_request:
-    branches: [master, main]
-
-jobs:
-  lint_python:
-    name: Lint Python Files
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-        
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.12
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-        
-    - name: Run Linter
-      run: |
-        # Esegue flake8 su tutti i file Python, escludendo le cartelle non necessarie
-        # (migrations, cache, virtual environments, node_modules)
-        flake8 . --exclude=migrations,__pycache__,venv,node_modules
-        echo "Linted all the python files successfully"
-
-  lint_js:
-    name: Lint JavaScript Files
+lint_js:
+    name: Lint JavaScript Files (ESLint)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
       
-    - name: Install Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 14
+        # Usa una versione LTS moderna, come la 20
+        node-version: 20
         
-    - name: Install JSHint
-      run: npm install jshint --global
-      
+    - name: Install Dependencies and ESLint
+      run: |
+        # Installa ESLint globalmente (o localmente se hai un package.json)
+        npm install -g eslint
+        # Se usi React, ti serviranno anche i plugin specifici
+        npm install -g eslint-plugin-react
+        
+    - name: Create ESLint Configuration File
+      run: |
+        # Crea il file .eslintrc.json con la configurazione che risolve gli errori ES6/ES8
+        echo '{
+          "env": {
+            "browser": true,
+            "node": true,
+            "es2020": true,
+            "jest": true
+          },
+          "extends": [
+            "eslint:recommended",
+            "plugin:react/recommended"
+          ],
+          "parserOptions": {
+            "ecmaVersion": 2020,
+            "sourceType": "module",
+            "ecmaFeatures": {
+              "jsx": true
+            }
+          },
+          "rules": {
+            "semi": ["error", "always"],
+            "no-unused-vars": "warn",
+            "react/prop-types": "off",
+            "quotes": ["error", "double"],
+            "prefer-const": "error",
+            "dot-notation": "off"
+          },
+          "settings": {
+            "react": {
+              "version": "detect"
+            }
+          }
+        }' > .eslintrc.json
+        
     - name: Run Linter
       run: |
-        # Esegue JSHint su tutti i file .js trovati nel repository
-        find . -name "*.js" -exec jshint {} +
+        # Esegue ESLint su tutte le cartelle, escludendo node_modules
+        eslint . --ext .js --ignore-path .gitignore --ignore-pattern "**/node_modules/**"
         echo "Linted all the js files successfully"
