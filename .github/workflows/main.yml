@@ -33,7 +33,7 @@ jobs:
   # ---
 
   lint_js:
-    name: Lint JavaScript Files (ESLint v8)
+    name: Lint JavaScript Files (ESLint)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
@@ -44,17 +44,20 @@ jobs:
       with:
         node-version: 20
         
-    # INSTALLAZIONE ESLINT v8 e plugin React
-    - name: Install ESLint v8 and Dependencies
+    # INSTALLAZIONE LOCALE DI ESLINT v8 e plugin React
+    - name: Install ESLint v8 and Dependencies Locally
       run: |
-        # Installiamo la versione 8 di ESLint che supporta .eslintrc.json
-        npm install -g eslint@8
-        npm install -g eslint-plugin-react
+        # Creiamo un file package.json vuoto (se non esiste) per installare le dipendenze
+        if [ ! -f package.json ]; then
+            npm init -y
+        fi
         
-    # CREAZIONE DEL FILE .eslintrc.json
+        # Installiamo le dipendenze localmente nella cartella node_modules
+        npm install eslint@8 eslint-plugin-react --save-dev
+        
+    # CREAZIONE DEL FILE .eslintrc.json (Rimane lo stesso)
     - name: Create ESLint Configuration File
       run: |
-        # Questo file è compatibile con ESLint v8 e risolve i problemi ES6/React
         echo '{
           "env": {
             "browser": true,
@@ -87,6 +90,12 @@ jobs:
             }
           }
         }' > .eslintrc.json
+        
+    - name: Run Linter
+      run: |
+        # Eseguiamo ESLint utilizzando il binario locale installato in node_modules/.bin/
+        ./node_modules/.bin/eslint . --ext .js --ignore-pattern "**/node_modules/**"
+        echo "Linted all the js files successfully"
         
     - name: Run Linter
       run: |
