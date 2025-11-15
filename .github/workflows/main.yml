@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [master, main]
 
-jobs:
+jobs: # Inizio della sezione "jobs" (lavori)
 
   lint_python:
-    name: Lint Python Files
+    name: Lint Python Files (Flake8)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
@@ -27,11 +27,13 @@ jobs:
         
     - name: Run Linter
       run: |
-        # Esegue flake8 su tutti i file Python, escludendo le cartelle non necessarie
+        # Esegue flake8, escludendo cartelle non necessarie
         flake8 . --exclude=migrations,__pycache__,venv,node_modules
         echo "Linted all the python files successfully"
 
-  lint_js: # <-- INIZIO DEL JOB JS
+  # ---
+
+  lint_js:
     name: Lint JavaScript Files (ESLint)
     runs-on: ubuntu-latest
     steps:
@@ -45,14 +47,15 @@ jobs:
         node-version: 20
         
     - name: Install Dependencies and ESLint
-      # Se non hai un package.json, l'installazione globale è necessaria
+      # Installazione globale di ESLint e del plugin React
       run: |
         npm install -g eslint
         npm install -g eslint-plugin-react
         
     - name: Create ESLint Configuration File
       run: |
-        # Crea il file .eslintrc.json con la configurazione che risolve gli errori ES6/ES8/React
+        # Crea il file .eslintrc.json per configurare ESLint
+        # Questo risolve gli errori di sintassi moderni (ES6/ES8/React)
         echo '{
           "env": {
             "browser": true,
@@ -88,6 +91,7 @@ jobs:
         
     - name: Run Linter
       run: |
-        # Esegue ESLint su tutte le cartelle, escludendo node_modules
-        eslint . --ext .js --ignore-path .gitignore --ignore-pattern "**/node_modules/**"
+        # Esegue ESLint, utilizzando la configurazione appena creata.
+        # Usa l'opzione --ignore-pattern per saltare node_modules e risolvere l'errore precedente.
+        eslint . --ext .js --ignore-pattern "**/node_modules/**"
         echo "Linted all the js files successfully"
