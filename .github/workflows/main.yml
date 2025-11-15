@@ -7,8 +7,9 @@ on:
     branches: [master, main]
 
 jobs:
+
   lint_python:
-    name: Lint Python Files
+    name: Lint Python Files (Flake8)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
@@ -26,28 +27,72 @@ jobs:
         
     - name: Run Linter
       run: |
-        # Esegue flake8 su tutti i file Python, escludendo le cartelle non necessarie
-        # (migrations, cache, virtual environments, node_modules)
         flake8 . --exclude=migrations,__pycache__,venv,node_modules
         echo "Linted all the python files successfully"
 
+  # ---
+
   lint_js:
-    name: Lint JavaScript Files
+    name: Lint JavaScript Files (ESLint v8)
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
       
-    - name: Install Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 14
+        node-version: 20
         
-    - name: Install JSHint
-      run: npm install jshint --global
-      
+    - name: Install ESLint v8 and Dependencies Locally
+      run: |
+        # Inizializza package.json se non esiste
+        if [ ! -f package.json ]; then
+            npm init -y
+        fi
+        
+        # Installazione locale di ESLint v8 e plugin (risolve il problema "plugin not found")
+        npm install eslint@8 eslint-plugin-react eslint-config-react-app --save-dev
+        
+    - name: Create ESLint Configuration File
+      run: |
+        # Questo file .eslintrc.json è compatibile con ESLint v8 e risolve i problemi ES6/React
+        echo '{
+          "env": {
+            "browser": true,
+            "node": true,
+            "es2020": true,
+            "jest": true
+          },
+          "extends": [
+            "eslint:recommended",
+            "plugin:react/recommended",
+            "react-app"
+          ],
+          "parserOptions": {
+            "ecmaVersion": 2020,
+            "sourceType": "module",
+            "ecmaFeatures": {
+              "jsx": true
+            }
+          },
+          "rules": {
+            "semi": ["error", "always"],
+            "no-unused-vars": "warn",
+            "react/prop-types": "off",
+            "quotes": ["error", "double"],
+            "prefer-const": "error",
+            "dot-notation": "off"
+          },
+          "settings": {
+            "react": {
+              "version": "detect"
+            }
+          }
+        }' > .eslintrc.json
+        
     - name: Run Linter
       run: |
-        # Esegue JSHint su tutti i file .js trovati nel repository
-        find . -name "*.js" -exec jshint {} +
+        # Esegue il binario locale di ESLint.
+        ./node_modules/.bin/eslint . --ext .js --ignore-pattern "**/node_modules/**"
         echo "Linted all the js files successfully"
