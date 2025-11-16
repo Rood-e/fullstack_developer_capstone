@@ -116,17 +116,29 @@ def get_dealerships(request, state="All"):
     return JsonResponse({"status":200,"dealers":dealerships})
 
 # Create a `get_dealer_reviews` view to render the reviews of a dealer
-def get_dealer_reviews(request,dealer_id):
-    if(dealer_id):
-        endpoint = "/fetchDealers/dealer/"+str(dealer_id)
+def get_dealer_reviews(request, dealer_id):
+    if dealer_id:
+        # Errore nell'endpoint: dovrebbe essere fetchReviews, non fetchDealers (forse un errore di battitura?)
+        endpoint = "/fetchReviews/dealer/"+str(dealer_id)
         reviews = get_request(endpoint)
 
-        for review in reviews:
-            sentiment_res = analyze_review_sentiments(review['review'])
-            print(sentiment_res)
-            review['sentiment'] = sentiment_res['sentiment']
+        # *** Correzione Cruciale: Controlla se 'reviews' esiste e non è vuoto ***
+        if reviews:
+            for review in reviews:
+                sentiment_res = analyze_review_sentiments(review['review'])
+                # La stampa è utile per il debug, ma puoi toglierla dopo:
+                # print(sentiment_res) 
+                
+                # Assicurati che 'sentiment_res' sia un dizionario con la chiave 'sentiment'
+                if 'sentiment' in sentiment_res: 
+                    review['sentiment'] = sentiment_res['sentiment']
+                else:
+                    review['sentiment'] = 'unknown' # Gestione del caso in cui l'analisi fallisca
 
-        return JsonResponse({"status": 200,"reviews":reviews})
+            return JsonResponse({"status": 200, "reviews": reviews})
+        else:
+            # Ritorna una risposta di successo, ma con una lista vuota, se non ci sono recensioni
+            return JsonResponse({"status": 200, "reviews": []}) 
     else:
         return JsonResponse({"status":400,"message":"Bad Request"})
 
@@ -135,16 +147,23 @@ def get_dealer_details(request, dealer_id):
     if(dealer_id):
         endpoint = "/fetchDealer/"+str(dealer_id)
         dealership = get_request(endpoint)
+        print("DEAL")
+        print(dealership)
         return JsonResponse({"status":200,"dealer":dealership})
     else:
         return JsonResponse({"status":400,"message":"Bad Request"})
 
 # Create a `add_review` view to submit a review
 def add_review(request):
+    print("*********** INIZIO DEBUG *************")
     if(request.user.is_anonymous == False):
         data = json.loads(request.body)
+        print("data")
+        print(data)
         try: 
             response = post_review(data)
+            print("RESPONSE")
+            print(response)
             return JsonResponse({"status":200})
         except:
             return JsonResponse({"status":400,"message":"Error in posting review"})
